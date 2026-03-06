@@ -24,8 +24,16 @@
     color: var(--green);
   }
 
+  /* ── Boot overlay ── */
+  #boot-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
   /* CRT scanlines overlay */
-  body::before {
+  #boot-overlay::before {
     content: '';
     position: fixed;
     inset: 0;
@@ -41,7 +49,7 @@
   }
 
   /* CRT vignette */
-  body::after {
+  #boot-overlay::after {
     content: '';
     position: fixed;
     inset: 0;
@@ -108,7 +116,7 @@
   }
 
   #boot-text::after {
-    content: '▋';
+    content: '\2589';
     display: inline-block;
     margin-left: 4px;
     animation: blink 1s step-end infinite;
@@ -128,12 +136,209 @@
   }
 
   #screen > * { position: relative; z-index: 1; }
+
+  /* ── "can't wait?" link ── */
+  #cant-wait {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--green-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    z-index: 12;
+    cursor: pointer;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+  #cant-wait:hover {
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green-mid);
+  }
+
+  /* ── Fizzle 1: CRT Power-Off ── */
+  @keyframes crt-off {
+    0% {
+      transform: scale(1, 1);
+      filter: brightness(1);
+      opacity: 1;
+    }
+    15% {
+      filter: brightness(3);
+    }
+    50% {
+      transform: scale(1, 0.005);
+      filter: brightness(2);
+      opacity: 1;
+    }
+    80% {
+      transform: scale(0.01, 0.005);
+      filter: brightness(1.5);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(0, 0);
+      filter: brightness(0);
+      opacity: 0;
+    }
+  }
+  #boot-overlay.crt-off {
+    animation: crt-off 0.6s cubic-bezier(0.2, 0, 0.8, 1) forwards;
+    pointer-events: none;
+  }
+
+  /* ── Fizzle 2: Static Dissolve ── */
+  @keyframes static-dissolve {
+    0% {
+      opacity: 1;
+      filter: blur(0) brightness(1);
+      background-blend-mode: normal;
+    }
+    30% {
+      opacity: 0.9;
+      filter: blur(0.5px) brightness(1.2);
+    }
+    60% {
+      opacity: 0.5;
+      filter: blur(1.5px) brightness(1.5);
+    }
+    100% {
+      opacity: 0;
+      filter: blur(4px) brightness(2);
+    }
+  }
+  @keyframes noise-in {
+    0%   { opacity: 0; }
+    30%  { opacity: 0.3; }
+    60%  { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+  #boot-overlay.static-dissolve {
+    animation: static-dissolve 0.8s ease-in forwards;
+    pointer-events: none;
+  }
+  #boot-overlay.static-dissolve #screen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+    mix-blend-mode: overlay;
+    animation: noise-in 0.8s ease-in forwards;
+    pointer-events: none;
+  }
+
+  /* ── Fizzle 3: Glitch + Fade ── */
+  @keyframes glitch-fade {
+    0% {
+      transform: translate(0, 0) skewX(0deg);
+      filter: brightness(1);
+      opacity: 1;
+      clip-path: inset(0 0 0 0);
+    }
+    10% {
+      transform: translate(-8px, 0) skewX(-2deg);
+      filter: brightness(1.3);
+      clip-path: inset(10% 0 30% 0);
+    }
+    15% {
+      transform: translate(12px, 0) skewX(3deg);
+      filter: brightness(0.8) hue-rotate(60deg);
+      clip-path: inset(40% 0 10% 0);
+    }
+    20% {
+      transform: translate(-4px, 2px) skewX(-1deg);
+      filter: brightness(1.5);
+      clip-path: inset(0 0 0 0);
+    }
+    30% {
+      transform: translate(6px, -2px) skewX(2deg);
+      filter: brightness(1.2) hue-rotate(-40deg);
+      clip-path: inset(20% 0 40% 0);
+    }
+    35% {
+      transform: translate(-10px, 0) skewX(-4deg);
+      filter: brightness(0.6);
+      clip-path: inset(60% 0 5% 0);
+    }
+    45% {
+      transform: translate(3px, 1px) skewX(1deg);
+      filter: brightness(1.8);
+      clip-path: inset(0 0 0 0);
+      opacity: 0.8;
+    }
+    55% {
+      transform: translate(-6px, 0) skewX(-2deg);
+      filter: brightness(1);
+      clip-path: inset(15% 0 50% 0);
+      opacity: 0.6;
+    }
+    70% {
+      transform: translate(2px, -1px) skewX(0deg);
+      filter: brightness(0.5);
+      clip-path: inset(0 0 0 0);
+      opacity: 0.3;
+    }
+    100% {
+      transform: translate(0, 0) skewX(0deg);
+      filter: brightness(0);
+      clip-path: inset(0 0 0 0);
+      opacity: 0;
+    }
+  }
+  #boot-overlay.glitch-fade {
+    animation: glitch-fade 0.7s steps(1, end) forwards;
+    pointer-events: none;
+  }
+  /* RGB split during glitch */
+  #boot-overlay.glitch-fade #boot-text {
+    animation: none;
+    text-shadow:
+      -3px 0 #ff0000,
+       3px 0 #00ffff;
+  }
+
+  /* ── Placeholder site behind overlay ── */
+  #site {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--green);
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+  }
 </style>
 </head>
 <body>
-  <div id="grid"></div>
-  <div id="screen">
-    <span id="boot-text">Skynet booting...</span>
+  <div id="site">
+    <!-- your website content goes here -->
   </div>
+
+  <div id="boot-overlay">
+    <div id="grid"></div>
+    <div id="screen">
+      <span id="boot-text">Skynet booting...</span>
+    </div>
+    <a id="cant-wait" href="javascript:void(0)" onclick="fizzleCrtOff()">can't wait?</a>
+  </div>
+
+  <script>
+    function fizzle(effect) {
+      var overlay = document.getElementById('boot-overlay');
+      if (!overlay || overlay.classList.contains(effect)) return;
+      overlay.classList.add(effect);
+      overlay.addEventListener('animationend', function() {
+        overlay.remove();
+      });
+    }
+
+    function fizzleCrtOff()  { fizzle('crt-off'); }
+    function fizzleStatic()  { fizzle('static-dissolve'); }
+    function fizzleGlitch()  { fizzle('glitch-fade'); }
+  </script>
 </body>
 </html>
