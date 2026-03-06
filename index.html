@@ -323,22 +323,25 @@
     <div id="screen">
       <span id="boot-text">Skynet booting...</span>
     </div>
-    <a id="cant-wait" href="javascript:void(0)" onclick="fizzleCrtOff()">can't wait?</a>
+    <a id="cant-wait" href="javascript:void(0)" onclick="fizzleCrtOff('https://github.com/general-intelligence-systems')">can't wait?</a>
   </div>
 
   <script>
     function fizzle(effect) {
-      var overlay = document.getElementById('boot-overlay');
-      if (!overlay || overlay.classList.contains(effect)) return;
-      overlay.classList.add(effect);
-      overlay.addEventListener('animationend', function() {
-        overlay.remove();
+      return new Promise(function(resolve) {
+        var overlay = document.getElementById('boot-overlay');
+        if (!overlay || overlay.classList.contains(effect)) { resolve(); return; }
+        overlay.classList.add(effect);
+        overlay.addEventListener('animationend', function() {
+          overlay.remove();
+          resolve();
+        });
       });
     }
 
-    function fizzleCrtOff()  { fizzle('crt-off'); }
-    function fizzleStatic()  { fizzle('static-dissolve'); }
-    function fizzleGlitch()  { fizzle('glitch-fade'); }
+    function fizzleCrtOff(url)  { fizzle('crt-off').then(function()  { if (url) window.location.href = url; }); }
+    function fizzleStatic(url)  { fizzle('static-dissolve').then(function() { if (url) window.location.href = url; }); }
+    function fizzleGlitch(url)  { fizzle('glitch-fade').then(function() { if (url) window.location.href = url; }); }
   </script>
 </body>
 </html>
