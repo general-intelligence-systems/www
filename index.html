@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKYNET</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #00ff41;
+    --green-dim: #003b00;
+    --green-mid: #00a020;
+    --bg: #000300;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--green);
+  }
+
+  /* CRT scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.18) 2px,
+      rgba(0, 0, 0, 0.18) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* CRT vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 55%,
+      rgba(0,0,0,0.6) 100%
+    );
+    pointer-events: none;
+    z-index: 11;
+  }
+
+  /* Subtle screen flicker */
+  @keyframes flicker {
+    0%   { opacity: 1; }
+    92%  { opacity: 1; }
+    93%  { opacity: 0.85; }
+    94%  { opacity: 1; }
+    96%  { opacity: 0.9; }
+    97%  { opacity: 1; }
+    100% { opacity: 1; }
+  }
+
+  #screen {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: flicker 7s infinite;
+    position: relative;
+  }
+
+  /* Phosphor glow pulse on the main text */
+  @keyframes glow-pulse {
+    0%, 100% {
+      text-shadow:
+        0 0 4px var(--green),
+        0 0 10px var(--green),
+        0 0 30px var(--green),
+        0 0 60px #00ff4188;
+      opacity: 1;
+    }
+    50% {
+      text-shadow:
+        0 0 2px var(--green-mid),
+        0 0 6px var(--green-mid),
+        0 0 14px var(--green-mid);
+      opacity: 0.7;
+    }
+  }
+
+  /* Cursor blink after the text */
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  #boot-text {
+    font-size: clamp(1.1rem, 3.5vw, 2.2rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    animation: glow-pulse 1.8s ease-in-out infinite;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  #boot-text::after {
+    content: '▋';
+    display: inline-block;
+    margin-left: 4px;
+    animation: blink 1s step-end infinite;
+    color: var(--green);
+  }
+
+  /* Faint background grid */
+  #grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--green-dim) 1px, transparent 1px),
+      linear-gradient(90deg, var(--green-dim) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.25;
+    z-index: 0;
+  }
+
+  #screen > * { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+  <div id="grid"></div>
+  <div id="screen">
+    <span id="boot-text">Skynet booting...</span>
+  </div>
+</body>
+</html>
