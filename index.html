@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SKYNET</title>
-<link rel="icon" href="/favicon.ico">
+<meta name="description" content="General Intelligence Systems — Skynet boot sequence">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
@@ -23,6 +24,29 @@
     overflow: hidden;
     font-family: 'Share Tech Mono', monospace;
     color: var(--green);
+  }
+
+  /* ── Skip-to-content link (a11y) ── */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg);
+    color: var(--green);
+    padding: 0.6em 1.2em;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    border: 1px solid var(--green);
+    z-index: 200;
+    text-decoration: none;
+    transition: top 0.15s ease;
+  }
+  .skip-link:focus {
+    top: 1rem;
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
   }
 
   /* ── Boot overlay ── */
@@ -144,16 +168,18 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%);
-    color: var(--green-dim);
+    color: var(--green-mid);
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.75rem;
     letter-spacing: 0.1em;
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
     z-index: 12;
     cursor: pointer;
     transition: color 0.3s, text-shadow 0.3s;
   }
-  #cant-wait:hover {
+  #cant-wait:hover,
+  #cant-wait:focus-visible {
     color: var(--green);
     text-shadow: 0 0 6px var(--green-mid);
   }
@@ -302,7 +328,7 @@
   }
 
   /* ── Placeholder site behind overlay ── */
-  #site {
+  #main-content {
     width: 100%; height: 100%;
     display: flex;
     align-items: center;
@@ -312,29 +338,81 @@
     font-size: 1.2rem;
     letter-spacing: 0.1em;
   }
+
+  /* ── Focus-visible styles (a11y) ── */
+  :focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 3px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* ── Reduced-motion preference (a11y — WCAG 2.3.1, 2.3.3) ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    #screen { animation: none; }
+    #boot-text { animation: none; }
+    #boot-text::after { animation: none; opacity: 1; }
+    #boot-overlay.crt-off,
+    #boot-overlay.static-dissolve,
+    #boot-overlay.glitch-fade {
+      animation: none;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
 </style>
 </head>
 <body>
-  <div id="site">
-    <!-- your website content goes here -->
-  </div>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-  <div id="boot-overlay">
-    <div id="grid"></div>
+  <main id="main-content" tabindex="-1">
+    <!-- your website content goes here -->
+  </main>
+
+  <div id="boot-overlay" role="dialog" aria-label="Boot sequence" aria-modal="true">
+    <div id="grid" aria-hidden="true"></div>
     <div id="screen">
-      <span id="boot-text">Skynet booting...</span>
+      <span id="boot-text" role="status" aria-live="polite">Skynet booting...</span>
     </div>
-    <a id="cant-wait" href="javascript:void(0)" onclick="fizzleCrtOff('https://openkrill.ai')">can't wait?</a>
+    <a id="cant-wait" href="https://openkrill.ai" aria-label="Skip boot sequence and continue to site">can't wait?</a>
   </div>
 
   <script>
+    /* ── Helpers ── */
+    var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function focusMain() {
+      var main = document.getElementById('main-content');
+      if (main) main.focus();
+    }
+
+    function removeOverlay() {
+      var overlay = document.getElementById('boot-overlay');
+      if (overlay) overlay.remove();
+      focusMain();
+    }
+
     function fizzle(effect) {
       return new Promise(function(resolve) {
         var overlay = document.getElementById('boot-overlay');
         if (!overlay || overlay.classList.contains(effect)) { resolve(); return; }
+
+        /* If user prefers reduced motion, skip the animation entirely */
+        if (prefersReducedMotion) {
+          removeOverlay();
+          resolve();
+          return;
+        }
+
         overlay.classList.add(effect);
         overlay.addEventListener('animationend', function() {
-          overlay.remove();
+          removeOverlay();
           resolve();
         });
       });
@@ -344,6 +422,18 @@
     function fizzleStatic(url)  { fizzle('static-dissolve').then(function() { if (url) window.location.href = url; }); }
     function fizzleGlitch(url)  { fizzle('glitch-fade').then(function() { if (url) window.location.href = url; }); }
 
+    /* ── "Can't wait?" link: progressive enhancement ──
+       The <a> has a real href so it works without JS.
+       With JS, we intercept click to play the fizzle effect first. */
+    var cantWait = document.getElementById('cant-wait');
+    if (cantWait) {
+      cantWait.addEventListener('click', function(e) {
+        e.preventDefault();
+        fizzleCrtOff(cantWait.href);
+      });
+    }
+
+    /* ── Favicon / title prank on tab-away ── */
     const originalTitle = document.title;
     const originalFavicon = document.querySelector("link[rel~='icon']")?.href;
 
@@ -362,7 +452,7 @@
         inactiveTimer = setTimeout(() => {
           document.title = 'PornHub';
           setFavicon(inactiveFavicon);
-        }, 10000);
+        }, 5000);
       } else {
         clearTimeout(inactiveTimer);
         document.title = originalTitle;
