@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SKYNET</title>
+<link rel="icon" href="/favicon.ico">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
@@ -342,6 +343,32 @@
     function fizzleCrtOff(url)  { fizzle('crt-off').then(function()  { if (url) window.location.href = url; }); }
     function fizzleStatic(url)  { fizzle('static-dissolve').then(function() { if (url) window.location.href = url; }); }
     function fizzleGlitch(url)  { fizzle('glitch-fade').then(function() { if (url) window.location.href = url; }); }
+
+    const originalTitle = document.title;
+    const originalFavicon = document.querySelector("link[rel~='icon']")?.href;
+
+    const setFavicon = (href) => {
+      const link = document.querySelector("link[rel~='icon']") || Object.assign(document.createElement('link'), { rel: 'icon' });
+      link.href = href;
+      document.head.appendChild(link);
+    };
+
+    const inactiveFavicon = 'data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAao/8AGxsbAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARAAAAEQARABEAAAARABEAEQAAABEAEQARERAAEQARABEREQAREREAEQARABEREQARABEAEQARABEAEQARABEAERERABEAEQARERAAEQARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
+    let inactiveTimer = null;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        inactiveTimer = setTimeout(() => {
+          document.title = 'PornHub';
+          setFavicon(inactiveFavicon);
+        }, 10000);
+      } else {
+        clearTimeout(inactiveTimer);
+        document.title = originalTitle;
+        setFavicon(originalFavicon);
+      }
+    });
   </script>
 </body>
 </html>
